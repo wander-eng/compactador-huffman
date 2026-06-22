@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "huffman.h"
 #include "heap.h"
@@ -284,5 +285,365 @@ void destruir_arvore(No *raiz)
     destruir_arvore(raiz->esquerda);
     destruir_arvore(raiz->direita);
     free(raiz);
+}
+
+/*Main temporária de testes!*/
+int main(void)
+{
+    /* ============================================================
+       TESTE 1 — no_criar() e no_criar_interno()
+       Esperado:
+       - folha com simbolo 'X', frequencia 7, sem filhos
+       - no interno com frequencia 5 (2 + 3)
+       ============================================================ */
+    {
+        No *folha = no_criar('X', 7);
+        No *esquerda = no_criar('A', 2);
+        No *direita = no_criar('B', 3);
+        No *interno = no_criar_interno(esquerda, direita);
+
+        if (folha == NULL || esquerda == NULL || direita == NULL || interno == NULL)
+        {
+            printf("[FAIL] Construtores de No retornaram NULL.\n");
+            destruir_arvore(folha);
+            destruir_arvore(interno);
+            return 1;
+        }
+
+        if (folha->simbolo != 'X' ||
+            folha->frequencia != 7 ||
+            folha->esquerda != NULL ||
+            folha->direita != NULL)
+        {
+            printf("[FAIL] no_criar nao preencheu corretamente a folha.\n");
+            destruir_arvore(folha);
+            destruir_arvore(interno);
+            return 1;
+        }
+
+        if (interno->esquerda != esquerda ||
+            interno->direita != direita ||
+            interno->frequencia != 5)
+        {
+            printf("[FAIL] no_criar_interno nao ligou os filhos ou nao somou frequencias corretamente.\n");
+            destruir_arvore(folha);
+            destruir_arvore(interno);
+            return 1;
+        }
+
+        printf("[PASS] no_criar e no_criar_interno.\n");
+        destruir_arvore(folha);
+        destruir_arvore(interno);
+    }
+
+    /* ============================================================
+       TESTE 2 — arquivo vazio
+       Esperado:
+       - contar_frequencias zera o vetor
+       - construir_arvore retorna NULL
+       ============================================================ */
+    {
+        FILE *arquivo;
+        int frequencias[TAMANHO_ALFABETO] = {0};
+        No *raiz;
+
+        arquivo = fopen("teste_vazio.txt", "wb");
+        if (arquivo == NULL)
+        {
+            printf("[FAIL] Nao foi possivel criar teste_vazio.txt.\n");
+            return 1;
+        }
+        fclose(arquivo);
+
+        arquivo = fopen("teste_vazio.txt", "rb");
+        if (arquivo == NULL)
+        {
+            printf("[FAIL] Nao foi possivel abrir teste_vazio.txt.\n");
+            return 1;
+        }
+
+        contar_frequencias(arquivo, frequencias);
+        fclose(arquivo);
+
+        raiz = construir_arvore(frequencias);
+        if (raiz != NULL)
+        {
+            printf("[FAIL] construir_arvore deveria retornar NULL para arquivo vazio.\n");
+            destruir_arvore(raiz);
+            return 1;
+        }
+
+        printf("[PASS] Arquivo vazio tratado corretamente.\n");
+        remove("teste_vazio.txt");
+    }
+
+    /* ============================================================
+       TESTE 3 — um único símbolo
+       Esperado:
+       - raiz com frequencia 6
+       - codigo de 'a' = "0"
+       - serializacao / desserializacao funcionando
+       ============================================================ */
+    {
+        FILE *arquivo;
+        FILE *saida1;
+        FILE *entrada;
+        FILE *saida2;
+        int frequencias[TAMANHO_ALFABETO] = {0};
+        No *raiz;
+        No *raiz2;
+        char tabela[TAMANHO_ALFABETO][TAMANHO_MAX_CODIGO];
+
+        arquivo = fopen("teste_um_simbolo.txt", "wb");
+        if (arquivo == NULL)
+        {
+            printf("[FAIL] Nao foi possivel criar teste_um_simbolo.txt.\n");
+            return 1;
+        }
+        fputs("aaaaaa", arquivo);
+        fclose(arquivo);
+
+        arquivo = fopen("teste_um_simbolo.txt", "rb");
+        if (arquivo == NULL)
+        {
+            printf("[FAIL] Nao foi possivel abrir teste_um_simbolo.txt.\n");
+            return 1;
+        }
+
+        contar_frequencias(arquivo, frequencias);
+        fclose(arquivo);
+
+        raiz = construir_arvore(frequencias);
+        if (raiz == NULL)
+        {
+            printf("[FAIL] construir_arvore retornou NULL para um unico simbolo.\n");
+            remove("teste_um_simbolo.txt");
+            return 1;
+        }
+
+        if (raiz->frequencia != 6)
+        {
+            printf("[FAIL] Frequencia da raiz esperada = 6, obtida = %d.\n", raiz->frequencia);
+            destruir_arvore(raiz);
+            remove("teste_um_simbolo.txt");
+            return 1;
+        }
+
+        gerar_codigos(raiz, tabela);
+
+        if (strcmp(tabela[(unsigned char)'a'], "0") != 0)
+        {
+            printf("[FAIL] Codigo esperado para 'a' em arvore de um no: \"0\". Obtido: \"%s\"\n",
+                   tabela[(unsigned char)'a']);
+            destruir_arvore(raiz);
+            remove("teste_um_simbolo.txt");
+            return 1;
+        }
+
+        saida1 = fopen("arvore_um_simbolo_1.bin", "wb");
+        if (saida1 == NULL)
+        {
+            printf("[FAIL] Nao foi possivel criar arvore_um_simbolo_1.bin.\n");
+            destruir_arvore(raiz);
+            remove("teste_um_simbolo.txt");
+            return 1;
+        }
+
+        serializar_arvore(raiz, saida1);
+        fclose(saida1);
+
+        entrada = fopen("arvore_um_simbolo_1.bin", "rb");
+        if (entrada == NULL)
+        {
+            printf("[FAIL] Nao foi possivel reabrir arvore_um_simbolo_1.bin.\n");
+            destruir_arvore(raiz);
+            remove("teste_um_simbolo.txt");
+            return 1;
+        }
+
+        raiz2 = desserializar_arvore(entrada);
+        fclose(entrada);
+
+        if (raiz2 == NULL)
+        {
+            printf("[FAIL] desserializar_arvore retornou NULL no caso de um unico simbolo.\n");
+            destruir_arvore(raiz);
+            remove("teste_um_simbolo.txt");
+            return 1;
+        }
+
+        saida2 = fopen("arvore_um_simbolo_2.bin", "wb");
+        if (saida2 == NULL)
+        {
+            printf("[FAIL] Nao foi possivel criar arvore_um_simbolo_2.bin.\n");
+            destruir_arvore(raiz);
+            destruir_arvore(raiz2);
+            remove("teste_um_simbolo.txt");
+            return 1;
+        }
+
+        serializar_arvore(raiz2, saida2);
+        fclose(saida2);
+
+        if (raiz2 == NULL)
+        {
+            printf("[FAIL] desserializacao falhou no caso de um unico simbolo.\n");
+            destruir_arvore(raiz);
+            remove("teste_um_simbolo.txt");
+            return 1;
+        }
+
+        printf("[PASS] Um unico simbolo tratado corretamente.\n");
+
+        destruir_arvore(raiz);
+        destruir_arvore(raiz2);
+        remove("teste_um_simbolo.txt");
+        remove("arvore_um_simbolo_1.bin");
+        remove("arvore_um_simbolo_2.bin");
+    }
+
+    /* ============================================================
+       TESTE 4 — string "aabbbcccc"
+       Esperado:
+       - frequencias: a=2, b=3, c=4
+       - raiz com frequencia 9
+       - códigos coerentes
+       - serialização / desserialização 
+       ============================================================ */
+    {
+        FILE *arquivo;
+        FILE *saida1;
+        FILE *entrada;
+        FILE *saida2;
+        int frequencias[TAMANHO_ALFABETO] = {0};
+        No *raiz;
+        No *raiz2;
+        char tabela[TAMANHO_ALFABETO][TAMANHO_MAX_CODIGO];
+
+        arquivo = fopen("teste_aabbbcccc.txt", "wb");
+        if (arquivo == NULL)
+        {
+            printf("[FAIL] Nao foi possivel criar teste_aabbbcccc.txt.\n");
+            return 1;
+        }
+        fputs("aabbbcccc", arquivo);
+        fclose(arquivo);
+
+        arquivo = fopen("teste_aabbbcccc.txt", "rb");
+        if (arquivo == NULL)
+        {
+            printf("[FAIL] Nao foi possivel abrir teste_aabbbcccc.txt.\n");
+            return 1;
+        }
+
+        contar_frequencias(arquivo, frequencias);
+        fclose(arquivo);
+
+        if (frequencias[(unsigned char)'a'] != 2 ||
+            frequencias[(unsigned char)'b'] != 3 ||
+            frequencias[(unsigned char)'c'] != 4)
+        {
+            printf("[FAIL] Frequencias esperadas: a=2, b=3, c=4.\n");
+            printf("       Obtido: a=%d, b=%d, c=%d\n",
+                   frequencias[(unsigned char)'a'],
+                   frequencias[(unsigned char)'b'],
+                   frequencias[(unsigned char)'c']);
+            remove("teste_aabbbcccc.txt");
+            return 1;
+        }
+
+        raiz = construir_arvore(frequencias);
+        if (raiz == NULL)
+        {
+            printf("[FAIL] construir_arvore retornou NULL para aabbbcccc.\n");
+            remove("teste_aabbbcccc.txt");
+            return 1;
+        }
+
+        if (raiz->frequencia != 9)
+        {
+            printf("[FAIL] Frequencia da raiz esperada = 9, obtida = %d.\n", raiz->frequencia);
+            destruir_arvore(raiz);
+            remove("teste_aabbbcccc.txt");
+            return 1;
+        }
+
+        gerar_codigos(raiz, tabela);
+
+        if (strcmp(tabela[(unsigned char)'a'], "10") != 0 ||
+            strcmp(tabela[(unsigned char)'b'], "11") != 0 ||
+            strcmp(tabela[(unsigned char)'c'], "0") != 0)
+        {
+            printf("[FAIL] Codigos inesperados para aabbbcccc.\n");
+            printf("       a='%s' b='%s' c='%s'\n",
+                   tabela[(unsigned char)'a'],
+                   tabela[(unsigned char)'b'],
+                   tabela[(unsigned char)'c']);
+            destruir_arvore(raiz);
+            remove("teste_aabbbcccc.txt");
+            return 1;
+        }
+
+        saida1 = fopen("arvore_1.bin", "wb");
+        if (saida1 == NULL)
+        {
+            printf("[FAIL] Nao foi possivel criar arvore_1.bin.\n");
+            destruir_arvore(raiz);
+            remove("teste_aabbbcccc.txt");
+            return 1;
+        }
+
+        serializar_arvore(raiz, saida1);
+        fclose(saida1);
+
+        entrada = fopen("arvore_1.bin", "rb");
+        if (entrada == NULL)
+        {
+            printf("[FAIL] Nao foi possivel reabrir arvore_1.bin.\n");
+            destruir_arvore(raiz);
+            remove("teste_aabbbcccc.txt");
+            return 1;
+        }
+
+        raiz2 = desserializar_arvore(entrada);
+        fclose(entrada);
+
+        if (raiz2 == NULL)
+        {
+            printf("[FAIL] desserializar_arvore retornou NULL para aabbbcccc.\n");
+            destruir_arvore(raiz);
+            remove("teste_aabbbcccc.txt");
+            return 1;
+        }
+
+        saida2 = fopen("arvore_2.bin", "wb");
+        if (saida2 == NULL)
+        {
+            printf("[FAIL] Nao foi possivel criar arvore_2.bin.\n");
+            destruir_arvore(raiz);
+            destruir_arvore(raiz2);
+            remove("teste_aabbbcccc.txt");
+            return 1;
+        }
+
+        serializar_arvore(raiz2, saida2);
+        fclose(saida2);
+
+        printf("[PASS] aabbbcccc validado corretamente.\n");
+        printf("       Raiz = %d, a=%s, b=%s, c=%s\n",
+               raiz->frequencia,
+               tabela[(unsigned char)'a'],
+               tabela[(unsigned char)'b'],
+               tabela[(unsigned char)'c']);
+
+        destruir_arvore(raiz);
+        destruir_arvore(raiz2);
+        remove("teste_aabbbcccc.txt");
+        remove("arvore_1.bin");
+        remove("arvore_2.bin");
+    }
+
+    printf("\nRESULTADO FINAL: TODOS OS TESTES PASSARAM.\n");
+    return 0;
 }
 
