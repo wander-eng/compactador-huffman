@@ -644,6 +644,8 @@ int main(void)
     }
 
     printf("\nRESULTADO FINAL: TODOS OS TESTES PASSARAM.\n");
+    printf("\nPressione ENTER para sair...");
+	getchar();
     return 0;
 }
 
