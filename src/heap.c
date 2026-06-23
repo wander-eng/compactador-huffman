@@ -124,7 +124,7 @@ No *heap_remover_min(Heap *h)
     return minimo;
 }
 
-
+/*Main de testes temporário
 int main(int argc, char *argv[]) {
     Heap *heap = heap_criar(10);
 
@@ -170,4 +170,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 
-}
+}*/
