@@ -287,15 +287,15 @@ void destruir_arvore(No *raiz)
     free(raiz);
 }
 
-/*Main temporária de testes!*/
-int main(void)
+//Main temporária de testes!
+/*int main(void)
 {
     /* ============================================================
        TESTE 1 — no_criar() e no_criar_interno()
        Esperado:
        - folha com simbolo 'X', frequencia 7, sem filhos
        - no interno com frequencia 5 (2 + 3)
-       ============================================================ */
+       ============================================================ 
     {
         No *folha = no_criar('X', 7);
         No *esquerda = no_criar('A', 2);
@@ -341,7 +341,7 @@ int main(void)
        Esperado:
        - contar_frequencias zera o vetor
        - construir_arvore retorna NULL
-       ============================================================ */
+       ============================================================ 
     {
         FILE *arquivo;
         int frequencias[TAMANHO_ALFABETO] = {0};
@@ -383,7 +383,7 @@ int main(void)
        - raiz com frequencia 6
        - codigo de 'a' = "0"
        - serializacao / desserializacao funcionando
-       ============================================================ */
+       ============================================================ 
     {
         FILE *arquivo;
         FILE *saida1;
@@ -509,7 +509,7 @@ int main(void)
        - raiz com frequencia 9
        - códigos coerentes
        - serialização / desserialização 
-       ============================================================ */
+       ============================================================ 
     {
         FILE *arquivo;
         FILE *saida1;
@@ -647,5 +647,4 @@ int main(void)
     printf("\nPressione ENTER para sair...");
 	getchar();
     return 0;
-}
-
+} */ 
