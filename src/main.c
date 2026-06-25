@@ -13,6 +13,7 @@
 #endif
 
 #include "arquivo.h"
+#include "log.h"
 
 #define REPOSITORIO_DIR "repositorio"
 #define MAX_LINHA 512
@@ -126,6 +127,27 @@ static int garantir_repositorio(void)
 
     return MKDIR(REPOSITORIO_DIR) == 0;
 }
+
+static void remover_aspas(char *texto)
+{
+    size_t len;
+
+    if (texto == NULL)
+    {
+        return;
+    }
+
+    len = strlen(texto);
+
+    if (len >= 2 &&
+        texto[0] == '"' &&
+        texto[len - 1] == '"')
+    {
+        memmove(texto, texto + 1, len - 2);
+        texto[len - 2] = '\0';
+    }
+}
+
 
 static void obter_basename(const char *caminho, char *saida, size_t tamanho_saida)
 {
@@ -309,6 +331,11 @@ static int listar_arquivos_repositorio(int modo, char nomes[][MAX_NOME_ARQUIVO],
         {
             continue;
         }
+        
+        if (strcmp(ent->d_name, ".gitkeep") == 0)
+		{
+		    continue;
+		}
 
         if (modo == 1)
         {
@@ -430,7 +457,7 @@ static void menu_compactar(void)
         {
             return;
         }
-
+		remover_aspas(caminho_manual);
         if (caminho_manual[0] == '\0')
         {
             printf("Caminho invalido.\n");
@@ -446,7 +473,7 @@ static void menu_compactar(void)
     }
 
     montar_saida_compactado(origem, destino, sizeof(destino));
-
+    
     if (comprimir(origem, destino) == 0)
     {
         printf("Arquivo compactado com sucesso.\n");
@@ -526,8 +553,11 @@ static void remover_compactado(void)
 static void visualizar_log(void)
 {
     printf("\n=== VISUALIZAR LOG ===\n");
-    printf("Funcionalidade de log ainda nao implementada.\n");
-    printf("(Etapa 5: log.c / log.h)\n");
+
+    exibir_log();
+
+    printf("\nPressione ENTER para continuar...");
+    getchar();
 }
 
 // ============================================================
