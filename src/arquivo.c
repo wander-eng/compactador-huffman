@@ -178,6 +178,7 @@ int comprimir(const char *caminho_entrada, const char *caminho_saida)
     int c;
     int i;
     uint32_t tamanho_original;
+    long tamanho_compactado;
     char *codigo;
 
     if (caminho_entrada == NULL || caminho_saida == NULL)
@@ -281,6 +282,12 @@ int comprimir(const char *caminho_entrada, const char *caminho_saida)
         fclose(entrada);
         destruir_arvore(raiz);
         return -1;
+    }
+
+    tamanho_compactado = ftell(saida);
+    if (tamanho_compactado >= 0 && (uint32_t)tamanho_compactado >= tamanho_original)
+    {
+        printf("[AVISO] Nao houve ganho de compressao para este arquivo.\n");
     }
 
     fclose(saida);
@@ -455,7 +462,7 @@ int verificar_integridade(const char *caminho_huff, const char *caminho_recupera
     return tamanho_original == tamanho_recuperado;
 }
 
-//TESTES TEMPORÁRIOS DA ETAPA 3:
+/*TESTES TEMPORÁRIOS DA ETAPA 3:
 int main(void)
 {
     const char *normal_txt = "repositorio/teste_normal.txt";
@@ -496,7 +503,7 @@ int main(void)
        - descomprimir(...) retorna 0
        - verificar_integridade(...) retorna 1
        - comparação byte a byte retorna 1
-       ============================================================ */
+       ============================================================ 
     retorno = comprimir(normal_txt, normal_huff);
     printf("[TESTE 1] comprimir(%s) -> %d (esperado: 0)\n", normal_txt, retorno);
     if (retorno != 0)
@@ -562,7 +569,7 @@ int main(void)
        - descomprimir(...) retorna 0
        - verificar_integridade(...) retorna 1
        - comparação byte a byte retorna 1
-       ============================================================ */
+       ============================================================ 
     if (ok)
     {
         retorno = comprimir(unico_txt, unico_huff);
@@ -628,7 +635,7 @@ int main(void)
        Conteúdo: vazio
        Esperado:
        - comprimir(...) retorna -1
-       ============================================================ */
+       ============================================================ 
     if (ok)
     {
         retorno = comprimir(vazio_txt, vazio_huff);
@@ -644,7 +651,7 @@ int main(void)
        Esperado:
        - comprimir(...) retorna -1
        - descomprimir(...) retorna -1
-       ============================================================ */
+       ============================================================ 
     if (ok)
     {
         retorno = comprimir(inexistente_txt, saida_inexistente);
@@ -682,4 +689,4 @@ int main(void)
     printf("\nPressione ENTER para sair...");
 	getchar();
     return 1;
-}
+}*/
