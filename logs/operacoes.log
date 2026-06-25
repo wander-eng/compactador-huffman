@@ -1,0 +1,28 @@
+[2026-06-25 01:03:41] COMPRESSAO | entrada=repositorio/teste_normal.txt | saida=repositorio/teste_normal.txt.huff | resultado=OK
+[2026-06-25 01:04:29] DESCOMPRESSAO | entrada=repositorio/teste_normal.txt.huff | saida=repositorio/teste_normal_recuperado.txt | resultado=ERRO: integridade divergente
+[2026-06-25 01:09:48] DESCOMPRESSAO | entrada=repositorio/teste_normal.txt.huff | saida=repositorio/teste_normal_recuperado_1.txt | resultado=ERRO: integridade divergente
+[2026-06-25 01:14:33] COMPRESSAO | entrada=repositorio/teste_normal.txt | saida=repositorio/teste_normal.txt.huff | resultado=OK
+[2026-06-25 01:14:43] DESCOMPRESSAO | entrada=repositorio/teste_normal.txt.huff | saida=repositorio/teste_normal_recuperado.txt | resultado=OK
+[2026-06-25 01:21:01] COMPRESSAO | entrada=repositorio/hino_brasileiro.txt | saida=repositorio/hino_brasileiro.txt.huff | resultado=OK
+[2026-06-25 01:24:44] COMPRESSAO | entrada=repositorio/ppc.pdf | saida=repositorio/ppc.pdf.huff | resultado=OK
+[2026-06-25 01:38:37] COMPRESSAO | entrada=repositorio/teste_grande.txt | saida=repositorio/teste_grande.txt.huff | resultado=OK
+[2026-06-25 01:39:08] DESCOMPRESSAO | entrada=repositorio/teste_grande.txt.huff | saida=repositorio/teste_grande_recuperado.txt | resultado=OK
+[2026-06-25 01:42:13] COMPRESSAO | entrada=repositorio/ATIV 1 PT - Wandemberg Filgueira.zip | saida=repositorio/ATIV 1 PT - Wandemberg Filgueira.zip.huff | resultado=OK
+[2026-06-25 01:43:47] COMPRESSAO | entrada=repositorio/Gato Yin Yang.jpg | saida=repositorio/Gato Yin Yang.jpg.huff | resultado=OK
+[2026-06-25 01:45:43] COMPRESSAO | entrada="C:\Users\Wande\Downloads\Roteiro de Apresenta‡Æo- L¢gica Temporal.docx" | saida=repositorio/Roteiro de Apresenta‡Æo- L¢gica Temporal.docx".huff | resultado=ERRO: nao foi possivel abrir arquivo de entrada
+[2026-06-25 01:46:08] COMPRESSAO | entrada=C:\Users\Wande\Downloads\Roteiro de Apresenta‡Æo- L¢gica Temporal.docx | saida=repositorio/Roteiro de Apresenta‡Æo- L¢gica Temporal.docx.huff | resultado=ERRO: nao foi possivel abrir arquivo de entrada
+[2026-06-25 01:49:45] COMPRESSAO | entrada="C:\Users\Wande\Downloads\Roteiro.docx" | saida=repositorio/Roteiro.docx".huff | resultado=ERRO: nao foi possivel abrir arquivo de entrada
+[2026-06-25 01:53:33] COMPRESSAO | entrada="C:\Users\Wande\Downloads\onepiece-prolog.pptx.pdf" | saida=repositorio/onepiece-prolog.pptx.pdf".huff | resultado=ERRO: nao foi possivel abrir arquivo de entrada
+[2026-06-25 01:55:13] COMPRESSAO | entrada="C:\Users\Wande\Downloads\onepiece-prolog.pptx.pdf" | saida=repositorio/onepiece-prolog.pptx.pdf".huff | resultado=ERRO: nao foi possivel abrir arquivo de entrada
+[2026-06-25 01:55:55] COMPRESSAO | entrada=C:\Users\Wande\Downloads\onepiece-prolog.pptx.pdf | saida=repositorio/onepiece-prolog.pptx.pdf.huff | resultado=OK
+[2026-06-25 01:56:43] COMPRESSAO | entrada=C:\Users\Wande\Downloads\Roteiro.docx | saida=repositorio/Roteiro.docx.huff | resultado=OK
+[2026-06-25 01:57:01] COMPRESSAO | entrada=repositorio/hino_brasileiro.txt | saida=repositorio/hino_brasileiro.txt.huff | resultado=OK
+[2026-06-25 02:05:34] COMPRESSAO | entrada="C:\Users\Wande\Downloads\Roteiro.docx" | saida=repositorio/Roteiro.docx".huff | resultado=ERRO: nao foi possivel abrir arquivo de entrada
+[2026-06-25 02:05:49] COMPRESSAO | entrada=C:\Users\Wande\Downloads\Roteiro.docx | saida=repositorio/Roteiro.docx.huff | resultado=OK
+[2026-06-25 02:14:41] COMPRESSAO | entrada=C:\Users\Wande\Downloads\Roteiro.docx | saida=repositorio/Roteiro.docx.huff | resultado=OK
+[2026-06-25 02:15:16] COMPRESSAO | entrada=repositorio/teste_unico.txt | saida=repositorio/teste_unico.txt.huff | resultado=OK
+[2026-06-25 02:15:52] COMPRESSAO | entrada=repositorio/ppc.pdf | saida=repositorio/ppc.pdf.huff | resultado=OK
+[2026-06-25 02:37:23] COMPRESSAO | entrada=C:\Users\Wande\Downloads\services-instagram-post-DTfn4cRDf1H-0.3fe091f0.mp4 | saida=repositorio/services-instagram-post-DTfn4cRDf1H-0.3fe091f0.mp4.huff | resultado=OK
+[2026-06-25 02:38:08] COMPRESSAO | entrada=repositorio/ATIV 1 PT - Wandemberg Filgueira.zip | saida=repositorio/ATIV 1 PT - Wandemberg Filgueira.zip.huff | resultado=OK
+[2026-06-25 02:38:38] COMPRESSAO | entrada=C:\Users\Wande\Downloads\ATIV 1 PT - Wandemberg Filgueira.zip | saida=repositorio/ATIV 1 PT - Wandemberg Filgueira.zip.huff | resultado=OK
+[2026-06-25 02:43:56] COMPRESSAO | entrada=repositorio/73c40f62-e1c4-44b4-a681-c5729060b63b.png | saida=repositorio/73c40f62-e1c4-44b4-a681-c5729060b63b.png.huff | resultado=OK

@@ -4,6 +4,7 @@
 
 #include "arquivo.h"
 #include "huffman.h"
+#include "log.h"
 
 static int eh_folha(No *no)
 {
@@ -168,11 +169,11 @@ static int ler_bit(FILE *arquivo, unsigned char *buffer, int *contador)
 
 int comprimir(const char *caminho_entrada, const char *caminho_saida)
 {
-    FILE *entrada;
-    FILE *saida;
+    FILE *entrada = NULL;
+    FILE *saida = NULL;
     int frequencias[TAMANHO_ALFABETO];
     char tabela[TAMANHO_ALFABETO][TAMANHO_MAX_CODIGO];
-    No *raiz;
+    No *raiz = NULL;
     unsigned char buffer;
     int contador;
     int c;
@@ -180,16 +181,20 @@ int comprimir(const char *caminho_entrada, const char *caminho_saida)
     uint32_t tamanho_original;
     long tamanho_compactado;
     char *codigo;
+    const char *resultado_log = "OK";
+    int status = -1;
 
     if (caminho_entrada == NULL || caminho_saida == NULL)
     {
-        return -1;
+        resultado_log = "ERRO: parametros invalidos";
+        goto cleanup;
     }
 
     entrada = fopen(caminho_entrada, "rb");
     if (entrada == NULL)
     {
-        return -1;
+        resultado_log = "ERRO: nao foi possivel abrir arquivo de entrada";
+        goto cleanup;
     }
 
     contar_frequencias(entrada, frequencias);
@@ -202,15 +207,15 @@ int comprimir(const char *caminho_entrada, const char *caminho_saida)
 
     if (tamanho_original == 0)
     {
-        fclose(entrada);
-        return -1;
+        resultado_log = "ERRO: arquivo vazio";
+        goto cleanup;
     }
 
     raiz = construir_arvore(frequencias);
     if (raiz == NULL)
     {
-        fclose(entrada);
-        return -1;
+        resultado_log = "ERRO: falha ao construir arvore";
+        goto cleanup;
     }
 
     gerar_codigos(raiz, tabela);
@@ -218,26 +223,21 @@ int comprimir(const char *caminho_entrada, const char *caminho_saida)
     saida = fopen(caminho_saida, "wb");
     if (saida == NULL)
     {
-        destruir_arvore(raiz);
-        fclose(entrada);
-        return -1;
+        resultado_log = "ERRO: nao foi possivel criar arquivo de saida";
+        goto cleanup;
     }
 
     if (!escrever_uint32(saida, tamanho_original))
     {
-        fclose(saida);
-        fclose(entrada);
-        destruir_arvore(raiz);
-        return -1;
+        resultado_log = "ERRO: falha ao escrever tamanho original";
+        goto cleanup;
     }
 
     serializar_arvore(raiz, saida);
     if (ferror(saida))
     {
-        fclose(saida);
-        fclose(entrada);
-        destruir_arvore(raiz);
-        return -1;
+        resultado_log = "ERRO: falha ao serializar arvore";
+        goto cleanup;
     }
 
     rewind(entrada);
@@ -249,10 +249,8 @@ int comprimir(const char *caminho_entrada, const char *caminho_saida)
         codigo = tabela[(unsigned char)c];
         if (codigo[0] == '\0')
         {
-            fclose(saida);
-            fclose(entrada);
-            destruir_arvore(raiz);
-            return -1;
+            resultado_log = "ERRO: codigo nao encontrado na tabela";
+            goto cleanup;
         }
 
         for (i = 0; codigo[i] != '\0'; i++)
@@ -267,10 +265,8 @@ int comprimir(const char *caminho_entrada, const char *caminho_saida)
             }
             else
             {
-                fclose(saida);
-                fclose(entrada);
-                destruir_arvore(raiz);
-                return -1;
+                resultado_log = "ERRO: codigo invalido";
+                goto cleanup;
             }
         }
     }
@@ -278,10 +274,8 @@ int comprimir(const char *caminho_entrada, const char *caminho_saida)
     flush_buffer(saida, &buffer, &contador);
     if (ferror(saida))
     {
-        fclose(saida);
-        fclose(entrada);
-        destruir_arvore(raiz);
-        return -1;
+        resultado_log = "ERRO: falha ao gravar bits comprimidos";
+        goto cleanup;
     }
 
     tamanho_compactado = ftell(saida);
@@ -290,56 +284,75 @@ int comprimir(const char *caminho_entrada, const char *caminho_saida)
         printf("[AVISO] Nao houve ganho de compressao para este arquivo.\n");
     }
 
-    fclose(saida);
-    fclose(entrada);
-    destruir_arvore(raiz);
+    status = 0;
+    resultado_log = "OK";
 
-    return 0;
+cleanup:
+    if (saida != NULL)
+    {
+        fclose(saida);
+    }
+
+    if (entrada != NULL)
+    {
+        fclose(entrada);
+    }
+
+    if (raiz != NULL)
+    {
+        destruir_arvore(raiz);
+    }
+
+    registrar_operacao(LOG_COMPRESSAO, caminho_entrada, caminho_saida, resultado_log);
+    return status;
 }
 
 int descomprimir(const char *caminho_entrada, const char *caminho_saida)
 {
-    FILE *entrada;
-    FILE *saida;
+    FILE *entrada = NULL;
+    FILE *saida = NULL;
     uint32_t tamanho_original;
     uint32_t bytes_escritos;
-    No *raiz;
+    No *raiz = NULL;
     No *atual;
     unsigned char buffer;
     int contador;
     int bit;
     int status_integridade;
+    const char *resultado_log = "OK";
+    int status = -1;
 
     if (caminho_entrada == NULL || caminho_saida == NULL)
     {
-        return -1;
+        resultado_log = "ERRO: parametros invalidos";
+        goto cleanup;
     }
 
     entrada = fopen(caminho_entrada, "rb");
     if (entrada == NULL)
     {
-        return -1;
+        resultado_log = "ERRO: nao foi possivel abrir arquivo de entrada";
+        goto cleanup;
     }
 
     if (!ler_uint32(entrada, &tamanho_original))
     {
-        fclose(entrada);
-        return -1;
+        resultado_log = "ERRO: falha ao ler tamanho original";
+        goto cleanup;
     }
 
     raiz = desserializar_arvore(entrada);
     if (raiz == NULL)
     {
-        fclose(entrada);
-        return -1;
+        resultado_log = "ERRO: falha ao desserializar arvore";
+        goto cleanup;
     }
 
     saida = fopen(caminho_saida, "wb");
     if (saida == NULL)
     {
-        destruir_arvore(raiz);
-        fclose(entrada);
-        return -1;
+        resultado_log = "ERRO: nao foi possivel criar arquivo de saida";
+        goto cleanup;
     }
 
     bytes_escritos = 0;
@@ -350,10 +363,8 @@ int descomprimir(const char *caminho_entrada, const char *caminho_saida)
         {
             if (fputc(raiz->simbolo, saida) == EOF)
             {
-                fclose(saida);
-                fclose(entrada);
-                destruir_arvore(raiz);
-                return -1;
+                resultado_log = "ERRO: falha ao escrever arquivo recuperado";
+                goto cleanup;
             }
             bytes_escritos++;
         }
@@ -369,10 +380,8 @@ int descomprimir(const char *caminho_entrada, const char *caminho_saida)
             bit = ler_bit(entrada, &buffer, &contador);
             if (bit < 0)
             {
-                fclose(saida);
-                fclose(entrada);
-                destruir_arvore(raiz);
-                return -1;
+                resultado_log = "ERRO: falha ao ler bits comprimidos";
+                goto cleanup;
             }
 
             if (bit == 0)
@@ -386,20 +395,16 @@ int descomprimir(const char *caminho_entrada, const char *caminho_saida)
 
             if (atual == NULL)
             {
-                fclose(saida);
-                fclose(entrada);
-                destruir_arvore(raiz);
-                return -1;
+                resultado_log = "ERRO: percurso invalido na arvore";
+                goto cleanup;
             }
 
             if (eh_folha(atual))
             {
                 if (fputc(atual->simbolo, saida) == EOF)
                 {
-                    fclose(saida);
-                    fclose(entrada);
-                    destruir_arvore(raiz);
-                    return -1;
+                    resultado_log = "ERRO: falha ao escrever arquivo recuperado";
+                    goto cleanup;
                 }
 
                 bytes_escritos++;
@@ -410,23 +415,44 @@ int descomprimir(const char *caminho_entrada, const char *caminho_saida)
 
     if (ferror(saida))
     {
-        fclose(saida);
-        fclose(entrada);
-        destruir_arvore(raiz);
-        return -1;
+        resultado_log = "ERRO: falha na escrita do arquivo recuperado";
+        goto cleanup;
     }
 
-    fclose(saida);
-    fclose(entrada);
-    destruir_arvore(raiz);
+	if (fflush(saida) != 0)
+	{
+	    resultado_log = "ERRO: falha ao finalizar escrita";
+	    goto cleanup;
+	}
 
     status_integridade = verificar_integridade(caminho_entrada, caminho_saida);
     if (status_integridade != 1)
     {
-        return -1;
+        resultado_log = "ERRO: integridade divergente";
+        goto cleanup;
     }
 
-    return 0;
+    status = 0;
+    resultado_log = "OK";
+
+cleanup:
+    if (saida != NULL)
+    {
+        fclose(saida);
+    }
+
+    if (entrada != NULL)
+    {
+        fclose(entrada);
+    }
+
+    if (raiz != NULL)
+    {
+        destruir_arvore(raiz);
+    }
+
+    registrar_operacao(LOG_DESCOMPRESSAO, caminho_entrada, caminho_saida, resultado_log);
+    return status;
 }
 
 int verificar_integridade(const char *caminho_huff, const char *caminho_recuperado)
