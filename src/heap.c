@@ -4,14 +4,14 @@
 
 //FUNÇÕES AUXILIARES
 
-// Troca dois ponteiros para nós
+// Troca as posições de dois nós no vetor do heap.
 static void trocar(No **a, No **b){
     No *temp = *a;
     *a = *b;
     *b = temp;
 }
 
-// Restaura a propriedade de min-heap subindo o elemento
+// Restaura a propriedade de min-heap subindo o elemento na árvore
 static void heapify_cima(Heap *h, int i){
     while (i > 0)
     {
@@ -28,7 +28,7 @@ static void heapify_cima(Heap *h, int i){
     }
 }
 
-// Restaura a propriedade de min-heap descendo o elemento
+// Restaura a propriedade de min-heap descendo o elemento na árvore
 static void heapify_baixo(Heap *h, int i){
     while (1)
     {
@@ -61,8 +61,7 @@ static void heapify_baixo(Heap *h, int i){
         i = menor;
     }
 }
-
-//CORPO DAS FUNÇÕES DECLARADA NO HEADER DO MÓDULO
+// Cria e inicializa um heap vazio com a capacidade informada.
 Heap *heap_criar(int capacidade){
 	Heap *h = malloc(sizeof(Heap));
 	if (h == NULL) {
@@ -77,7 +76,7 @@ Heap *heap_criar(int capacidade){
 	h->capacidade = capacidade;
 	return h;
 }
-
+// Libera a estrutura do heap sem liberar os nós armazenados nele.
 void heap_destruir(Heap *h){
 	if (h == NULL) {
 		return; 
@@ -85,11 +84,11 @@ void heap_destruir(Heap *h){
 	free(h->dados);
 	free(h);
 }
-
+// Verifica se o heap está vazio ou se o ponteiro recebido é nulo.
 int heap_vazio(Heap *h){
 	return h == NULL || h->tamanho == 0;
 }
-
+// Insere um nó no heap e ajusta a estrutura para manter a ordem mínima.
 void heap_inserir(Heap *h, No *no)
 {
     if (h == NULL || no == NULL)
@@ -103,7 +102,7 @@ void heap_inserir(Heap *h, No *no)
 
     heapify_cima(h, h->tamanho - 1);
 }
-
+// Remove e retorna o nó de menor frequência do heap.
 No *heap_remover_min(Heap *h)
 {
     No *minimo;
@@ -123,51 +122,3 @@ No *heap_remover_min(Heap *h)
 
     return minimo;
 }
-
-/*Main de testes temporário
-int main(int argc, char *argv[]) {
-    Heap *heap = heap_criar(10);
-
-    No n1 = {'A', 10, NULL, NULL};
-    No n2 = {'B', 3,  NULL, NULL};
-    No n3 = {'C', 8,  NULL, NULL};
-    No n4 = {'D', 1,  NULL, NULL};
-    No n5 = {'E', 5,  NULL, NULL};
-
-    heap_inserir(heap, &n1);
-    heap_inserir(heap, &n2);
-    heap_inserir(heap, &n3);
-    heap_inserir(heap, &n4);
-    heap_inserir(heap, &n5);
-
-    int esperado[] = {1, 3, 5, 8, 10};
-
-    for (int i = 0; i < 5; i++)
-    {
-        No *minimo = heap_remover_min(heap);
-
-        if (minimo == NULL)
-        {
-            printf("FALHA: heap retornou NULL\n");
-            heap_destruir(heap);
-            return 1;
-        }
-
-        if (minimo->frequencia != esperado[i])
-        {
-            printf("FALHA: esperado %d, obtido %d\n",
-                   esperado[i],
-                   minimo->frequencia);
-
-            heap_destruir(heap);
-            return 1;
-        }
-    }
-
-    printf("TESTE APROVADO\n");
-
-    heap_destruir(heap);
-
-    return 0;
-
-}*/

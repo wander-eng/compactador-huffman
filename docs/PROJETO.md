@@ -1,4 +1,4 @@
-# Projeto AED — Compactador Huffman em C
+# Compactador Huffman em C
 
 ## Visão Geral
 
@@ -22,8 +22,15 @@ Implementação de um compactador e descompactador de arquivos usando o algoritm
 ```
 1. Selecionar arquivo da pasta do repositório (lista arquivos disponíveis)
 2. Digitar caminho manualmente
+0. Retornar ao menu principal
 ```
 
+### Submenu — Remover arquivo compactado
+```
+1. Remover um arquivo
+2. Remover TODOS os arquivos .huff
+0. Retornar ao menu principal
+```
 ---
 
 ## Funcionalidades
@@ -56,7 +63,7 @@ Implementação de um compactador e descompactador de arquivos usando o algoritm
 - Exibe o conteúdo do arquivo de log na tela
 - Formato de cada entrada:
   ```
-  [YYYY-MM-DD HH:MM] | OPERACAO | arquivo_entrada → arquivo_saida | resultado
+  [YYYY-MM-DD HH:MM] | OPERACAO | arquivo_entrada | arquivo_saida | resultado
   ```
 
 ---
@@ -72,17 +79,38 @@ typedef struct No {
     struct No *direita;
 } No;
 ```
+- Representa um nó da árvore binária de Huffman.
+- Nós folha armazenam um símbolo do arquivo.
+- Nós internos armazenam apenas a frequência acumulada dos filhos.
+
+### Vetor de frequências
+- Vetor de 256 posições indexado pelo valor do byte (0 a 255)
+- Cada posição armazena a contagem de ocorrências daquele byte no arquivo
+- Utilizado na fase inicial de contagem, antes da construção da árvore
 
 ### Min-Heap (fila de prioridade)
+```c
+typedef struct Heap {
+    No **dados;
+    int tamanho;
+    int capacidade;
+} Heap;
+```
 - Usado na construção da árvore de Huffman
 - Implementado como vetor com operações de heapify
-- Cada elemento é um ponteiro para `No`
+- Cada elemento é um ponteiro para um nó da árvore de Huffman.
+
 
 ### Tabela de códigos
-- Vetor de 256 posições indexado pelo valor do byte
-- Cada posição armazena a string de bits correspondente (ex: `"101"`)
+- Matriz TAMANHO_ALFABETO x TAMANHO_MAX_CODIGO
+- Cada linha corresponde a um byte (0 a 255)
+- Cada linha armazena a representação binária (string de '0' e '1') do símbolo correspondente
 
-### Cabeçalho do arquivo `.huff`
+---
+
+## Formato do Arquivo `.huff`
+
+Cabeçalho dado por:
 ```
 [4 bytes] tamanho original do arquivo em bytes
 [N bytes] árvore serializada (percurso pré-ordem)
@@ -124,11 +152,14 @@ huffman/
 │   ├── arquivo.h
 │   ├── log.c           — registro de operações
 │   └── log.h
-├── repositorio/        — pasta fixa onde ficam os .huff
+├── docs/               — pasta de documentação técnica do projeto
+│   └── PROJETO.md      
+├── repositorio/        — pasta fixa onde ficam os arquivos para operação
 ├── logs/
-│   └── operacoes.log
+├── .gitignore
+├── LICENSE
 ├── Makefile
-└── PROJETO.md
+└── README.md
 ```
 
 ---
@@ -154,6 +185,8 @@ huffman/
 ---
 
 ## Referências
-
-- CORMEN, T. H. et al. *Algoritmos: teoria e prática*. 3. ed. Rio de Janeiro: Elsevier, 2012. (Cap. 16.3 — Códigos de Huffman)
-- SEDGEWICK, Robert. *Algorithms in C: Parts 1-4*. 3. ed. Addison-Wesley, 1998.
+- CORMEN, T. H. et al. Algoritmos: teoria e prática. 3. ed. Rio de Janeiro: Elsevier, 2012.
+- MOFFAT, A.; TURPIN, A. Compression and Coding Algorithms. Springer Science+Business Media, LLC
+- SALOMON, D. Data Compression: The Complete Reference. 4. ed. Springer.
+- SEDGEWICK, R. Algorithms in C, Parts 1-4: Fundamentals, Data Structures, Sorting, Searching. 3. ed. Reading, Massachusetts: Addison-Wesley, 1998.
+- TENENBAUM, A. M.; LANGSAM, Y.; AUGENSTEIN, M. J. Estruturas de Dados Usando C. Tradução de Teresa Cristina Félix de Souza. São Paulo: MAKRON Books, 1995.

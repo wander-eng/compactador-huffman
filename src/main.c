@@ -21,10 +21,8 @@
 #define MAX_NOME_ARQUIVO 260
 #define MAX_ARQUIVOS 256
 
-/* ============================================================
-   Utilidades gerais de interface
-   ============================================================ */
-
+//==Utilidades gerais de interface==
+// Remove a quebra de linha final de uma string lida do teclado.
 static void remover_quebra_linha(char *texto)
 {
     size_t len;
@@ -40,7 +38,7 @@ static void remover_quebra_linha(char *texto)
         texto[len - 1] = '\0';
     }
 }
-
+// Lê uma linha da entrada padrão com uma mensagem de prompt.
 static int ler_linha(const char *prompt, char *buffer, size_t tamanho)
 {
     if (prompt != NULL)
@@ -56,7 +54,7 @@ static int ler_linha(const char *prompt, char *buffer, size_t tamanho)
     remover_quebra_linha(buffer);
     return 1;
 }
-
+// Lê uma opção inteira informada pelo usuário.
 static int ler_opcao(const char *prompt, int *valor)
 {
     char linha[MAX_LINHA];
@@ -88,7 +86,19 @@ static int ler_opcao(const char *prompt, int *valor)
     *valor = (int)numero;
     return 1;
 }
-
+// Limpa a tela do terminal e reposiciona o cursor no topo.
+static void limpar_tela(void)
+{
+    printf("\x1b[2J\x1b[H");
+    fflush(stdout);
+}
+// Aguarda o usuário pressionar ENTER antes de continuar.
+static void pausar(void)
+{
+    printf("\nPressione ENTER para continuar...");
+    getchar();
+}
+// Verifica se uma string termina com o sufixo informado.
 static int termina_com(const char *texto, const char *sufixo)
 {
     size_t len_texto;
@@ -109,13 +119,13 @@ static int termina_com(const char *texto, const char *sufixo)
 
     return strcmp(texto + (len_texto - len_sufixo), sufixo) == 0;
 }
-
+// Verifica se um caminho aponta para um arquivo existente.
 static int arquivo_existe(const char *caminho)
 {
     struct stat info;
     return caminho != NULL && stat(caminho, &info) == 0;
 }
-
+// Garante que a pasta do repositório exista antes do uso.
 static int garantir_repositorio(void)
 {
     struct stat info;
@@ -127,7 +137,7 @@ static int garantir_repositorio(void)
 
     return MKDIR(REPOSITORIO_DIR) == 0;
 }
-
+// Remove aspas do início e do fim de um caminho copiado.
 static void remover_aspas(char *texto)
 {
     size_t len;
@@ -147,8 +157,7 @@ static void remover_aspas(char *texto)
         texto[len - 2] = '\0';
     }
 }
-
-
+// Extrai apenas o nome final de um caminho completo.
 static void obter_basename(const char *caminho, char *saida, size_t tamanho_saida)
 {
     const char *ultimo_slash;
@@ -181,7 +190,7 @@ static void obter_basename(const char *caminho, char *saida, size_t tamanho_said
 
     snprintf(saida, tamanho_saida, "%s", base);
 }
-
+// Remove a extensão .huff do nome de um arquivo compactado.
 static void obter_base_sem_huff(const char *nome_huff, char *saida, size_t tamanho_saida)
 {
     char base[MAX_NOME_ARQUIVO];
@@ -203,7 +212,7 @@ static void obter_base_sem_huff(const char *nome_huff, char *saida, size_t taman
 
     snprintf(saida, tamanho_saida, "%s", base);
 }
-
+// Monta o caminho de saída do arquivo compactado no repositório.
 static void montar_saida_compactado(const char *entrada, char *saida, size_t tamanho_saida)
 {
     char nome_base[MAX_NOME_ARQUIVO];
@@ -217,7 +226,7 @@ static void montar_saida_compactado(const char *entrada, char *saida, size_t tam
     obter_basename(entrada, nome_base, sizeof(nome_base));
     snprintf(saida, tamanho_saida, "%s/%s.huff", REPOSITORIO_DIR, nome_base);
 }
-
+// Monta o caminho de saída do arquivo recuperado.
 static void montar_saida_descompactado(const char *entrada_huff, char *saida, size_t tamanho_saida)
 {
     char nome_arquivo[MAX_NOME_ARQUIVO];
@@ -275,7 +284,7 @@ static void montar_saida_descompactado(const char *entrada_huff, char *saida, si
         snprintf(candidato, sizeof(candidato), "%s/%s_recuperado", REPOSITORIO_DIR, raiz);
     }
 
-    /* Evita sobrescrever um arquivo já existente */
+    // Evita sobrescrever um arquivo já existente
     if (arquivo_existe(candidato))
     {
         contador = 1;
@@ -302,12 +311,8 @@ static void montar_saida_descompactado(const char *entrada_huff, char *saida, si
     snprintf(saida, tamanho_saida, "%s", candidato);
 }
 
-/* ============================================================
-   Listagem de arquivos do repositório
-   modo = 0 -> lista arquivos comuns (não .huff)
-   modo = 1 -> lista apenas arquivos .huff
-   ============================================================ */
-
+// Lista os arquivos do repositório de acordo com o modo informado.
+// modo: 0 para arquivos comuns, 1 para arquivos .huff.
 static int listar_arquivos_repositorio(int modo, char nomes[][MAX_NOME_ARQUIVO], long tamanhos[], int max_arquivos)
 {
     DIR *dir;
@@ -383,7 +388,8 @@ static int listar_arquivos_repositorio(int modo, char nomes[][MAX_NOME_ARQUIVO],
 
     return quantidade;
 }
-
+// Permite selecionar um arquivo listado no repositório.
+// modo: 0 para arquivos comuns, 1 para arquivos .huff.
 static int selecionar_arquivo_repositorio(int modo, char *selecionado, size_t tamanho_selecionado)
 {
     char nomes[MAX_ARQUIVOS][MAX_NOME_ARQUIVO];
@@ -417,24 +423,23 @@ static int selecionar_arquivo_repositorio(int modo, char *selecionado, size_t ta
     return 1;
 }
 
-/* ============================================================
-   Ações do menu
-   ============================================================ */
-
+//==Ações do menu==
+// Exibe o submenu de compactação e encaminha a operação escolhida.
 static void menu_compactar(void)
-{
+{	
     int subopcao;
     char origem[MAX_CAMINHO];
     char destino[MAX_CAMINHO];
     char caminho_manual[MAX_CAMINHO];
-
+	
+	limpar_tela();
     printf("\n=== COMPACTAR ARQUIVO ===\n");
-    printf("0. Retornar ao menu principal\n");
     printf("1. Selecionar arquivo da pasta do repositorio\n");
     printf("2. Digitar caminho manualmente\n");
-
+    printf("0. Retornar ao menu principal\n");
+    
     if (!ler_opcao("Opcao: ", &subopcao))
-    {
+    {	pausar();
         return;
     }
 
@@ -445,7 +450,7 @@ static void menu_compactar(void)
     else if (subopcao == 1)
     {
         if (!selecionar_arquivo_repositorio(0, origem, sizeof(origem)))
-        {
+        {	pausar();
             return;
         }
     }
@@ -454,13 +459,14 @@ static void menu_compactar(void)
         if (!ler_linha("Digite o caminho do arquivo de entrada: ",
                        caminho_manual,
                        sizeof(caminho_manual)))
-        {
+        {	pausar();
             return;
         }
 		remover_aspas(caminho_manual);
         if (caminho_manual[0] == '\0')
         {
             printf("Caminho invalido.\n");
+            pausar();
             return;
         }
 
@@ -469,6 +475,7 @@ static void menu_compactar(void)
     else
     {
         printf("Opcao invalida.\n");
+        pausar();
         return;
     }
 
@@ -478,22 +485,26 @@ static void menu_compactar(void)
     {
         printf("Arquivo compactado com sucesso.\n");
         printf("Saida: %s\n", destino);
+        pausar();
     }
     else
     {
         printf("Falha ao compactar o arquivo.\n");
+        pausar();
     }
 }
-
+// Exibe o submenu de descompactação e executa a recuperação do arquivo.
 static void menu_descompactar(void)
 {
     char origem[MAX_CAMINHO];
     char destino[MAX_CAMINHO];
-
+    
+	limpar_tela();
     printf("\n=== DESCOMPACTAR ARQUIVO ===\n");
 
     if (!selecionar_arquivo_repositorio(1, origem, sizeof(origem)))
     {
+    	pausar();
         return;
     }
 
@@ -504,66 +515,175 @@ static void menu_descompactar(void)
         printf("Arquivo descompactado com sucesso.\n");
         printf("Saida: %s\n", destino);
         printf("Integridade: OK\n");
+        pausar();
     }
     else
     {
         printf("Falha ao descompactar o arquivo.\n");
+        pausar();
     }
 }
-
+// Exibe os arquivos compactados disponíveis no repositório.
 static void listar_compactados(void)
 {
+	limpar_tela();
     printf("\n=== ARQUIVOS COMPACTADOS ===\n");
     (void)listar_arquivos_repositorio(1, NULL, NULL, 0);
+    pausar();
 }
-
+// Exibe o submenu de remoção de arquivos compactados.
 static void remover_compactado(void)
-{
+{	
     char caminho[MAX_CAMINHO];
     char resposta[16];
 
+    int opcao;
+	
+	limpar_tela();
     printf("\n=== REMOVER ARQUIVO COMPACTADO ===\n");
+    printf("1. Remover um arquivo\n");
+    printf("2. Remover TODOS os arquivos .huff\n");
+    printf("0. Retornar ao menu principal\n");
 
-    if (!selecionar_arquivo_repositorio(1, caminho, sizeof(caminho)))
-    {
+    if (!ler_opcao("Opcao: ", &opcao))
+    {	pausar();
         return;
     }
 
-    if (!ler_linha("Confirma a exclusao? (s/n): ", resposta, sizeof(resposta)))
+	if (opcao == 0)
     {
         return;
     }
-
-    if (resposta[0] != 's' && resposta[0] != 'S')
+    else if (opcao == 1)
     {
-        printf("Operacao cancelada.\n");
-        return;
+        if (!selecionar_arquivo_repositorio(1, caminho, sizeof(caminho)))
+        {	pausar();
+            return;
+        }
+
+        if (!ler_linha("Confirma a exclusao? (s/n): ",
+                       resposta,
+                       sizeof(resposta)))
+        {
+            return;
+        }
+
+        if (resposta[0] != 's' && resposta[0] != 'S')
+        {
+            printf("Operacao cancelada.\n");
+            pausar();
+            return;
+        }
+		if (remove(caminho) == 0)
+		{
+		    printf("Arquivo removido com sucesso.\n");
+			pausar();
+		    registrar_operacao(
+		        LOG_REMOCAO,
+		        caminho,
+		        NULL,
+		        "OK");
+		}
+		else
+		{
+		    printf("Falha ao remover o arquivo.\n");
+			pausar();
+		    registrar_operacao(
+		        LOG_REMOCAO,
+		        caminho,
+		        NULL,
+		        "ERRO");
+		}
     }
-
-    if (remove(caminho) == 0)
+    else if (opcao == 2)
     {
-        printf("Arquivo removido com sucesso.\n");
+        DIR *dir;
+        struct dirent *ent;
+		char resultado[64];
+		
+        int removidos = 0;
+
+        if (!ler_linha(
+                "Tem certeza que deseja remover TODOS os .huff? (s/n): ",
+                resposta,
+                sizeof(resposta)))
+        {
+            return;
+        }
+
+        if (resposta[0] != 's' && resposta[0] != 'S')
+        {
+            printf("Operacao cancelada.\n");
+            pausar();
+            return;
+        }
+
+        dir = opendir(REPOSITORIO_DIR);
+
+        if (dir == NULL)
+        {
+            printf("Nao foi possivel abrir o repositorio.\n");
+            pausar();
+            return;
+        }
+
+        while ((ent = readdir(dir)) != NULL)
+        {
+            char arquivo[MAX_CAMINHO];
+
+            if (!termina_com(ent->d_name, ".huff"))
+            {
+                continue;
+            }
+
+            snprintf(
+                arquivo,
+                sizeof(arquivo),
+                "%s/%s",
+                REPOSITORIO_DIR,
+                ent->d_name);
+
+            if (remove(arquivo) == 0)
+            {
+                removidos++;
+            }
+        }
+
+        closedir(dir);
+		
+		printf("%d arquivo(s) removido(s).\n", removidos);
+		pausar();
+		
+		snprintf(
+		    resultado,
+		    sizeof(resultado),
+		    "%d arquivo(s) removido(s)",
+		    removidos);
+		
+		registrar_operacao(
+		    LOG_REMOCAO,
+		    "TODOS",
+		    NULL,
+		    resultado);
     }
     else
     {
-        printf("Falha ao remover o arquivo.\n");
+        printf("Opcao invalida.\n");
+        pausar();
     }
 }
-
+// Exibe o conteúdo do log de operações.
 static void visualizar_log(void)
-{
+{	limpar_tela();
     printf("\n=== VISUALIZAR LOG ===\n");
 
     exibir_log();
 
-    printf("\nPressione ENTER para continuar...");
-    getchar();
+    pausar();
 }
 
-// ============================================================
-//   Main
-// ============================================================
-
+//==Main==
+// Exibe o menu principal e coordena as operações do programa.
 int main(void)
 {
     int opcao;
@@ -575,8 +695,8 @@ int main(void)
     }
 
     do
-    {
-        printf("\n=== COMPACTADOR HUFFMAN ===\n");
+    {	limpar_tela();
+		printf("\n=== COMPACTADOR HUFFMAN ===\n");
         printf("1. Compactar arquivo\n");
         printf("2. Descompactar arquivo\n");
         printf("3. Listar arquivos compactados\n");
@@ -612,12 +732,12 @@ int main(void)
                 break;
 
             case 6:
-                printf("\nPressione ENTER para sair...");
-				getchar();
+				printf("Encerrando.");
                 break;
 
             default:
                 printf("Opcao invalida.\n");
+                pausar();
                 break;
         }
 
