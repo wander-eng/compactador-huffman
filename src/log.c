@@ -15,7 +15,7 @@
 
 #define PASTA_LOG "logs"
 #define TAMANHO_LINHA_LOG 512
-
+// Garante que a pasta de logs exista antes da gravação.
 static int garantir_pasta_logs(void)
 {
     struct stat info;
@@ -27,7 +27,7 @@ static int garantir_pasta_logs(void)
 
     return MKDIR(PASTA_LOG) == 0;
 }
-
+// Converte o tipo da operação para texto legível no log.
 static const char *tipo_para_string(TipoOperacao tipo)
 {
     switch (tipo)
@@ -38,8 +38,6 @@ static const char *tipo_para_string(TipoOperacao tipo)
             return "DESCOMPRESSAO";
         case LOG_REMOCAO:
             return "REMOCAO";
-        case LOG_LISTAGEM:
-            return "LISTAGEM";
         default:
             return "OPERACAO";
     }

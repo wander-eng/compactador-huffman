@@ -1,0 +1,9 @@
+*.exe
+*.o
+*.obj
+
+logs/*.log
+!logs/.gitkeep
+
+repositorio/*
+!repositorio/.gitkeep

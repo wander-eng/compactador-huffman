@@ -6,11 +6,12 @@
 #include "huffman.h"
 #include "log.h"
 
+// Identifica se o nó é uma folha da árvore de Huffman.
 static int eh_folha(No *no)
 {
     return no != NULL && no->esquerda == NULL && no->direita == NULL;
 }
-
+// Escreve um inteiro de 32 bits no arquivo em ordem de bytes fixa.
 static int escrever_uint32(FILE *arquivo, uint32_t valor)
 {
     if (arquivo == NULL)
@@ -37,7 +38,7 @@ static int escrever_uint32(FILE *arquivo, uint32_t valor)
 
     return 1;
 }
-
+// Lê um inteiro de 32 bits do arquivo em ordem de bytes fixa.
 static int ler_uint32(FILE *arquivo, uint32_t *valor)
 {
     int b1;
@@ -67,7 +68,7 @@ static int ler_uint32(FILE *arquivo, uint32_t *valor)
 
     return 1;
 }
-
+// Obtém o tamanho total de um arquivo em bytes.
 static int obter_tamanho_arquivo(const char *caminho, uint32_t *tamanho)
 {
     FILE *arquivo;
@@ -101,7 +102,7 @@ static int obter_tamanho_arquivo(const char *caminho, uint32_t *tamanho)
     *tamanho = (uint32_t)posicao;
     return 1;
 }
-
+// Acumula bits em um byte e grava no arquivo quando o buffer completa.
 static void escrever_bit(FILE *arquivo, int bit, unsigned char *buffer, int *contador)
 {
     if (arquivo == NULL || buffer == NULL || contador == NULL)
@@ -121,7 +122,7 @@ static void escrever_bit(FILE *arquivo, int bit, unsigned char *buffer, int *con
         *contador = 0;
     }
 }
-
+// Escreve no arquivo o último byte parcial do buffer, completando com zeros.
 static void flush_buffer(FILE *arquivo, unsigned char *buffer, int *contador)
 {
     if (arquivo == NULL || buffer == NULL || contador == NULL)
@@ -137,7 +138,7 @@ static void flush_buffer(FILE *arquivo, unsigned char *buffer, int *contador)
         *contador = 0;
     }
 }
-
+// Lê o próximo bit do arquivo usando um buffer de bytes.
 static int ler_bit(FILE *arquivo, unsigned char *buffer, int *contador)
 {
     int byte_lido;
@@ -286,8 +287,8 @@ int comprimir(const char *caminho_entrada, const char *caminho_saida)
 
     status = 0;
     resultado_log = "OK";
-
-cleanup:
+	//rótulo para limpeza geral
+	cleanup:
     if (saida != NULL)
     {
         fclose(saida);
@@ -435,7 +436,7 @@ int descomprimir(const char *caminho_entrada, const char *caminho_saida)
     status = 0;
     resultado_log = "OK";
 
-cleanup:
+	cleanup:
     if (saida != NULL)
     {
         fclose(saida);
@@ -487,232 +488,3 @@ int verificar_integridade(const char *caminho_huff, const char *caminho_recupera
 
     return tamanho_original == tamanho_recuperado;
 }
-
-/*TESTES TEMPORÁRIOS DA ETAPA 3:
-int main(void)
-{
-    const char *normal_txt = "repositorio/teste_normal.txt";
-    const char *normal_huff = "repositorio/teste_normal.huff";
-    const char *normal_rec = "repositorio/teste_normal_recuperado.txt";
-
-    const char *unico_txt = "repositorio/teste_unico.txt";
-    const char *unico_huff = "repositorio/teste_unico.huff";
-    const char *unico_rec = "repositorio/teste_unico_recuperado.txt";
-
-    const char *vazio_txt = "repositorio/teste_vazio.txt";
-    const char *vazio_huff = "repositorio/teste_vazio.huff";
-
-    const char *inexistente_txt = "repositorio/nao_existe.txt";
-    const char *saida_inexistente = "repositorio/saida_inexistente.huff";
-
-    FILE *a;
-    FILE *b;
-    int ca;
-    int cb;
-    int retorno;
-    int ok = 1;
-
-    remove(normal_huff);
-    remove(normal_rec);
-    remove(unico_huff);
-    remove(unico_rec);
-    remove(vazio_huff);
-    remove(saida_inexistente);
-
-    printf("=== TESTES TEMPORARIOS DA ETAPA 3 ===\n\n");
-
-    /* ============================================================
-       TESTE 1 — arquivo simples
-       Conteúdo: aabbbcccc
-       Esperado:
-       - comprimir(...) retorna 0
-       - descomprimir(...) retorna 0
-       - verificar_integridade(...) retorna 1
-       - comparação byte a byte retorna 1
-       ============================================================ 
-    retorno = comprimir(normal_txt, normal_huff);
-    printf("[TESTE 1] comprimir(%s) -> %d (esperado: 0)\n", normal_txt, retorno);
-    if (retorno != 0)
-        ok = 0;
-
-    if (ok)
-    {
-        retorno = descomprimir(normal_huff, normal_rec);
-        printf("[TESTE 1] descomprimir(%s) -> %d (esperado: 0)\n", normal_huff, retorno);
-        if (retorno != 0)
-            ok = 0;
-    }
-
-    if (ok)
-    {
-        retorno = verificar_integridade(normal_huff, normal_rec);
-        printf("[TESTE 1] verificar_integridade(...) -> %d (esperado: 1)\n", retorno);
-        if (retorno != 1)
-            ok = 0;
-    }
-
-    if (ok)
-    {
-        a = fopen(normal_txt, "rb");
-        b = fopen(normal_rec, "rb");
-
-        if (a == NULL || b == NULL)
-        {
-            printf("[TESTE 1] Falha ao abrir arquivos para comparacao byte a byte.\n");
-            ok = 0;
-        }
-        else
-        {
-            while (1)
-            {
-                ca = fgetc(a);
-                cb = fgetc(b);
-
-                if (ca != cb)
-                {
-                    ok = 0;
-                    break;
-                }
-
-                if (ca == EOF)
-                    break;
-            }
-
-            fclose(a);
-            fclose(b);
-
-            printf("[TESTE 1] comparacao byte a byte -> %d (esperado: 1)\n", ok ? 1 : 0);
-        }
-    }
-
-    printf("[TESTE 1] %s\n\n", ok ? "PASS" : "FAIL");
-
-    /* ============================================================
-       TESTE 2 — árvore de um único nó
-       Conteúdo: aaaaaaaaaa
-       Esperado:
-       - comprimir(...) retorna 0
-       - descomprimir(...) retorna 0
-       - verificar_integridade(...) retorna 1
-       - comparação byte a byte retorna 1
-       ============================================================ 
-    if (ok)
-    {
-        retorno = comprimir(unico_txt, unico_huff);
-        printf("[TESTE 2] comprimir(%s) -> %d (esperado: 0)\n", unico_txt, retorno);
-        if (retorno != 0)
-            ok = 0;
-    }
-
-    if (ok)
-    {
-        retorno = descomprimir(unico_huff, unico_rec);
-        printf("[TESTE 2] descomprimir(%s) -> %d (esperado: 0)\n", unico_huff, retorno);
-        if (retorno != 0)
-            ok = 0;
-    }
-
-    if (ok)
-    {
-        retorno = verificar_integridade(unico_huff, unico_rec);
-        printf("[TESTE 2] verificar_integridade(...) -> %d (esperado: 1)\n", retorno);
-        if (retorno != 1)
-            ok = 0;
-    }
-
-    if (ok)
-    {
-        a = fopen(unico_txt, "rb");
-        b = fopen(unico_rec, "rb");
-
-        if (a == NULL || b == NULL)
-        {
-            printf("[TESTE 2] Falha ao abrir arquivos para comparacao byte a byte.\n");
-            ok = 0;
-        }
-        else
-        {
-            while (1)
-            {
-                ca = fgetc(a);
-                cb = fgetc(b);
-
-                if (ca != cb)
-                {
-                    ok = 0;
-                    break;
-                }
-
-                if (ca == EOF)
-                    break;
-            }
-
-            fclose(a);
-            fclose(b);
-
-            printf("[TESTE 2] comparacao byte a byte -> %d (esperado: 1)\n", ok ? 1 : 0);
-        }
-    }
-
-    printf("[TESTE 2] %s\n\n", ok ? "PASS" : "FAIL");
-
-    /* ============================================================
-       TESTE 3 — arquivo vazio
-       Conteúdo: vazio
-       Esperado:
-       - comprimir(...) retorna -1
-       ============================================================ 
-    if (ok)
-    {
-        retorno = comprimir(vazio_txt, vazio_huff);
-        printf("[TESTE 3] comprimir(%s) -> %d (esperado: -1)\n", vazio_txt, retorno);
-        if (retorno != -1)
-            ok = 0;
-
-        printf("[TESTE 3] %s\n\n", (retorno == -1) ? "PASS" : "FAIL");
-    }
-
-    /* ============================================================
-       TESTE 4 — caminho inexistente
-       Esperado:
-       - comprimir(...) retorna -1
-       - descomprimir(...) retorna -1
-       ============================================================ 
-    if (ok)
-    {
-        retorno = comprimir(inexistente_txt, saida_inexistente);
-        printf("[TESTE 4] comprimir(%s) -> %d (esperado: -1)\n", inexistente_txt, retorno);
-        if (retorno != -1)
-            ok = 0;
-
-        retorno = descomprimir(inexistente_txt, saida_inexistente);
-        printf("[TESTE 4] descomprimir(%s) -> %d (esperado: -1)\n", inexistente_txt, retorno);
-        if (retorno != -1)
-            ok = 0;
-
-        printf("[TESTE 4] %s\n\n", (retorno == -1) ? "PASS" : "FAIL");
-    }
-
-    remove(normal_huff);
-    remove(normal_rec);
-    remove(unico_huff);
-    remove(unico_rec);
-    remove(vazio_huff);
-    remove(saida_inexistente);
-
-    printf("====================================\n");
-    if (ok)
-    {
-        printf("RESULTADO FINAL: TODOS OS TESTES PASSARAM.\n");
-        printf("RETORNO ESPERADO SE TUDO ESTIVER CERTO: 0\n");
-        printf("\nPressione ENTER para sair...");
-		getchar();
-        return 0;
-    }
-
-    printf("RESULTADO FINAL: HOUVE FALHA EM PELO MENOS UM TESTE.\n");
-    printf("RETORNO ESPERADO SE ALGUM TESTE FALHAR: 1\n");
-    printf("\nPressione ENTER para sair...");
-	getchar();
-    return 1;
-}*/
